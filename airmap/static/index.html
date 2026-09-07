@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Airmap — podgląd sieci WiFi</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>Airmap</h1>
+    <span id="auto-scan-status" class="status-badge">Auto-skan: sprawdzanie…</span>
+    <div class="scan-controls">
+      <button id="scan-button" type="button">Skanuj teraz</button>
+      <span id="scan-spinner" class="spinner hidden" aria-live="polite">Skanowanie…</span>
+    </div>
+  </header>
+
+  <div id="error-banner" class="error-banner hidden" role="alert"></div>
+
+  <main>
+    <section aria-labelledby="table-heading">
+      <h2 id="table-heading">Wykryte sieci</h2>
+      <div id="networks-table-container" class="table-scroll"></div>
+    </section>
+
+    <section aria-labelledby="chart-heading">
+      <h2 id="chart-heading">Zajętość kanałów</h2>
+      <div class="charts-row">
+        <div id="chart-2-4ghz" class="chart"></div>
+        <div id="chart-5ghz" class="chart"></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

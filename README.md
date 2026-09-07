@@ -10,8 +10,12 @@ This repo currently contains:
   (`netsh` on Windows, `nmcli` on Linux) usable from the CLI.
 - **Phase 2** — a FastAPI backend on top of Phase 1: on-demand scans,
   scheduled background scanning, and scan history persisted to SQLite.
+- **Phase 3** — a static HTML/CSS/JS frontend (no build step, no framework),
+  served by the same FastAPI process: a table of currently detected
+  networks and a channel-occupancy chart (Plotly.js).
 
-No frontend yet (planned for a later phase).
+A network topology graph and a signal-over-time history view are planned
+for later phases.
 
 ## Requirements
 
@@ -54,9 +58,10 @@ Start the dev server:
 uvicorn airmap.app:app --reload
 ```
 
-Then open **http://127.0.0.1:8000/docs** for the interactive Swagger UI, or
-use `curl`. The SQLite database is created at `airmap/data/airmap.db` on
-first request that needs it.
+Then open **http://127.0.0.1:8000/** for the frontend (see below), or
+**http://127.0.0.1:8000/docs** for the interactive Swagger UI, or use
+`curl` directly. The SQLite database is created at `airmap/data/airmap.db`
+on first request that needs it.
 
 #### Endpoints
 
@@ -95,6 +100,27 @@ curl -X POST http://127.0.0.1:8000/scan/auto/stop
 curl http://127.0.0.1:8000/history/network/aa:bb:cc:dd:ee:ff
 ```
 
+### Frontend (Phase 3)
+
+With the server running, open **http://127.0.0.1:8000/** in a browser:
+
+- A table of the most recently recorded scan (SSID, BSSID, channel, band,
+  signal, security). Click a column header to sort by it (defaults to
+  strongest signal first). Shows "Brak danych, wykonaj pierwszy skan" if
+  no scan has been recorded yet.
+- Two channel-occupancy bar charts (2.4GHz and 5GHz — different channel
+  numbering, so they're separate charts), showing how many networks share
+  each channel; hover a bar to see which SSIDs are on it.
+- A **"Skanuj teraz"** button that runs `POST /scan` and re-renders the
+  table and charts in place, no page reload.
+- A small badge showing whether auto-scan is currently active and at what
+  interval (`GET /scan/auto/status`) — starting/stopping auto-scan itself
+  is still done via `/docs` or `curl`, not from this page.
+
+The frontend is plain HTML/CSS/JS (`airmap/static/`), loaded as native ES
+modules — no npm, no bundler, no framework. Plotly.js is loaded from its
+CDN in `index.html`.
+
 ## Project layout
 
 ```
@@ -107,8 +133,16 @@ airmap/
 ├── main.py              # CLI runner (python -m airmap.main)
 ├── db.py                # SQLite schema + persistence (stdlib sqlite3)
 ├── scheduler.py         # asyncio-based periodic background scan loop
-├── app.py               # FastAPI app and endpoints
-└── data/                # airmap.db lives here (gitignored)
+├── app.py               # FastAPI app, endpoints, and static frontend mount
+├── data/                # airmap.db lives here (gitignored)
+└── static/              # Phase 3 frontend (plain HTML/CSS/JS, no build step)
+    ├── index.html
+    ├── css/style.css
+    └── js/
+        ├── api.js       # fetch wrappers for the backend endpoints
+        ├── table.js     # renders + sorts the networks table
+        ├── chart.js     # Plotly channel-occupancy charts
+        └── app.js       # entry point, wires the above together
 ```
 
 ## Notes on design choices
