@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+airmap/data/*.db
+airmap/data/*.db-wal
+airmap/data/*.db-shm
+.claude/
