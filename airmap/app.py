@@ -19,6 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import db
+from . import graph as graph_module
 from .base import ScanParseError, UnsupportedPlatformError, WifiScanner
 from .factory import get_scanner
 from .models import NetworkInfo
@@ -98,6 +99,36 @@ class DistinctNetworkOut(BaseModel):
     bssid: str
     band: str
     last_seen: datetime
+
+
+class GraphNodeOut(BaseModel):
+    """One access point as a graph node (mirrors `NetworkReadingOut` plus a vis.js-friendly `id`)."""
+
+    id: str
+    ssid: str
+    bssid: str
+    channel: int
+    frequency_mhz: int
+    band: str
+    signal_dbm: int | None
+    signal_percent: int | None
+    security: str
+
+
+class GraphEdgeOut(BaseModel):
+    """One channel-similarity edge between two APs (see `graph.py` for the rules)."""
+
+    source: str
+    target: str
+    weight: float
+    reason: str
+
+
+class GraphOut(BaseModel):
+    """Response of `GET /graph`: a logical channel-similarity graph, not physical topology."""
+
+    nodes: list[GraphNodeOut]
+    edges: list[GraphEdgeOut]
 
 
 class AutoScanStartRequest(BaseModel):
@@ -221,6 +252,23 @@ def get_latest_networks() -> ScanDetailOut:
     detail = db.get_scan_detail(scan_id)
     assert detail is not None  # scan_id was just read from the same table
     return ScanDetailOut(**detail)
+
+
+@app.get("/graph", response_model=GraphOut)
+def get_graph() -> GraphOut:
+    """Logical channel-similarity graph for the most recently recorded scan.
+
+    An edge means two APs are close enough in channel to potentially
+    interfere with each other -- this is not a physical connectivity graph
+    (Airmap has no way to know what devices are associated with which AP).
+    See `graph.py` for the exact per-band edge rules.
+    """
+    scan_id = db.get_latest_scan_id()
+    if scan_id is None:
+        raise HTTPException(404, "No scans recorded yet. Run POST /scan first.")
+    detail = db.get_scan_detail(scan_id)
+    assert detail is not None  # scan_id was just read from the same table
+    return GraphOut(**graph_module.build_graph_data(detail["networks"]))
 
 
 @app.get("/history", response_model=list[ScanSummaryOut])
