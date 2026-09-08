@@ -6,6 +6,7 @@
   <title>Airmap — podgląd sieci WiFi</title>
   <link rel="stylesheet" href="/static/css/style.css" />
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
   <header class="app-header">
@@ -22,6 +23,8 @@
   <nav class="tabs" role="tablist">
     <button id="tab-btn-list" class="tab-button active" type="button" role="tab"
       aria-selected="true" aria-controls="tab-panel-list">Lista sieci</button>
+    <button id="tab-btn-graph" class="tab-button" type="button" role="tab"
+      aria-selected="false" aria-controls="tab-panel-graph">Graf sieci</button>
     <button id="tab-btn-history" class="tab-button" type="button" role="tab"
       aria-selected="false" aria-controls="tab-panel-history">Historia</button>
   </nav>
@@ -30,7 +33,9 @@
     <div id="tab-panel-list" role="tabpanel" aria-labelledby="tab-btn-list">
       <section aria-labelledby="table-heading">
         <h2 id="table-heading">Wykryte sieci</h2>
-        <div id="networks-table-container" class="table-scroll"></div>
+        <div id="networks-table-container" class="table-scroll">
+          <p class="empty-message">Ładowanie…</p>
+        </div>
       </section>
 
       <section aria-labelledby="chart-heading">
@@ -42,7 +47,51 @@
       </section>
     </div>
 
+    <div id="tab-panel-graph" role="tabpanel" aria-labelledby="tab-btn-graph" class="hidden">
+      <p class="text-muted graph-intro">
+        To graf logiczny podobieństwa kanałów, nie mapa faktycznych połączeń: węzły to wykryte
+        access pointy, a krawędzie łączą AP-y, których kanały mogą się wzajemnie zakłócać.
+        Airmap nie wie, jakie urządzenia są podłączone do którego AP.
+      </p>
+      <div id="graph-warning" class="warning-banner hidden"></div>
+
+      <section aria-labelledby="graph-heading">
+        <h2 id="graph-heading">Graf sieci</h2>
+        <div id="graph-container" class="graph-container"></div>
+      </section>
+
+      <section aria-labelledby="graph-legend-heading">
+        <h2 id="graph-legend-heading">Legenda</h2>
+        <div class="graph-legend">
+          <div class="legend-group">
+            <span class="legend-title">Pasmo (obwódka węzła):</span>
+            <span class="legend-item"><span class="legend-swatch" style="border-color:#3a7bd5"></span>2.4GHz</span>
+            <span class="legend-item"><span class="legend-swatch" style="border-color:#e8912d"></span>5GHz</span>
+            <span class="legend-item"><span class="legend-swatch" style="border-color:#4caf7d"></span>6GHz</span>
+          </div>
+          <div class="legend-group">
+            <span class="legend-title">Siła sygnału (wypełnienie węzła):</span>
+            <span class="legend-gradient"></span>
+            <span class="text-muted">słaby → silny</span>
+          </div>
+          <div class="legend-group">
+            <span class="legend-title">Krawędzie:</span>
+            <span class="legend-item"><span class="legend-line legend-line-strong"></span>ten sam kanał (silna kolizja)</span>
+            <span class="legend-item"><span class="legend-line legend-line-weak"></span>częściowe nakładanie (tylko 2.4GHz)</span>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="graph-details-heading">
+        <h2 id="graph-details-heading">Szczegóły</h2>
+        <div id="graph-details">
+          <p class="empty-message">Kliknij węzeł, aby zobaczyć szczegóły.</p>
+        </div>
+      </section>
+    </div>
+
     <div id="tab-panel-history" role="tabpanel" aria-labelledby="tab-btn-history" class="hidden">
+      <p id="history-loading" class="text-muted hidden">Ładowanie historii…</p>
       <div id="history-warning" class="warning-banner hidden"></div>
 
       <section aria-labelledby="history-range-heading">

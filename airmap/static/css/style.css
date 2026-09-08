@@ -132,8 +132,19 @@ section {
   margin-bottom: 1.5rem;
 }
 
+/* Bounded height + sticky header: shared by the main networks table and the
+   history scan list, so neither turns the page into an endless scroll once
+   a scan finds hundreds of networks (or history grows to many scans). */
 .table-scroll {
+  max-height: 360px;
   overflow-x: auto;
+  overflow-y: auto;
+}
+
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel-bg);
 }
 
 .networks-table {
@@ -269,6 +280,97 @@ section {
   background: var(--accent);
   color: white;
   border-color: var(--accent);
+}
+
+.graph-intro {
+  margin-top: 0;
+}
+
+.graph-container {
+  height: 500px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+}
+
+.graph-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.legend-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.legend-title {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  border: 3px solid;
+  background: var(--panel-bg);
+}
+
+.legend-gradient {
+  display: inline-block;
+  width: 120px;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(to right, hsl(0, 65%, 45%), hsl(60, 65%, 45%), hsl(120, 65%, 45%));
+}
+
+.legend-line {
+  display: inline-block;
+  width: 2rem;
+  height: 0;
+  border-top-width: 3px;
+  border-top-style: solid;
+  border-top-color: #c0392b;
+}
+
+.legend-line-strong {
+  border-top-width: 4px;
+  border-top-style: solid;
+}
+
+.legend-line-weak {
+  border-top-width: 2px;
+  border-top-style: dashed;
+  border-top-color: #e0a458;
+}
+
+.graph-details-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 1rem;
+  margin: 0;
+}
+
+.graph-details-list dt {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.graph-details-list dd {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 700px) {

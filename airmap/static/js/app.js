@@ -7,6 +7,7 @@
 
 import { ApiError, getAutoScanStatus, getLatestNetworks, postScan } from "./api.js";
 import { renderChannelCharts } from "./chart.js";
+import { initGraphTab, refreshGraph } from "./graph.js";
 import { initHistoryTab } from "./history.js";
 import { renderNetworksTable } from "./table.js";
 
@@ -25,6 +26,10 @@ function clearError() {
 function renderNetworks(networks) {
   renderNetworksTable(networks);
   renderChannelCharts(networks);
+  // Same mechanism as the table/charts above: re-render after every load or
+  // scan. refreshGraph() itself no-ops the actual vis.js draw when the Graf
+  // tab isn't the visible one, so this is cheap when it's not being looked at.
+  refreshGraph();
 }
 
 async function loadLatest() {
@@ -76,6 +81,7 @@ async function handleScanClick() {
 
 const TABS = [
   { buttonId: "tab-btn-list", panelId: "tab-panel-list" },
+  { buttonId: "tab-btn-graph", panelId: "tab-panel-graph" },
   { buttonId: "tab-btn-history", panelId: "tab-panel-history" },
 ];
 
@@ -86,9 +92,11 @@ function activateTab(targetButtonId) {
     document.getElementById(buttonId).setAttribute("aria-selected", String(isActive));
     document.getElementById(panelId).classList.toggle("hidden", !isActive);
   }
-  if (targetButtonId === "tab-btn-history") {
-    // Reloaded on every activation (not just the first) so switching back
-    // in always reflects any scans taken while on another tab.
+  // Reloaded on every activation (not just the first) so switching back in
+  // always reflects any scans taken while on another tab.
+  if (targetButtonId === "tab-btn-graph") {
+    initGraphTab();
+  } else if (targetButtonId === "tab-btn-history") {
     initHistoryTab();
   }
 }

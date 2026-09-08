@@ -205,6 +205,16 @@ function renderCountChart() {
 }
 
 async function refreshHistory() {
+  const loading = document.getElementById("history-loading");
+  loading.classList.remove("hidden");
+  try {
+    await refreshHistoryData();
+  } finally {
+    loading.classList.add("hidden");
+  }
+}
+
+async function refreshHistoryData() {
   clearWarning();
 
   let allScans;

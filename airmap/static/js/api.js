@@ -12,6 +12,20 @@ export class ApiError extends Error {
   }
 }
 
+/** Normalizes a FastAPI error body's `detail` to a plain string.
+ * On a 422, `detail` is an array of pydantic error objects (not a string) --
+ * passed straight through, `new Error(detail)` would stringify it via
+ * Array.prototype.toString into the useless "[object Object]". */
+function detailToMessage(detail) {
+  if (typeof detail === "string") {
+    return detail;
+  }
+  if (Array.isArray(detail)) {
+    return detail.map((e) => (e && typeof e === "object" && e.msg) || JSON.stringify(e)).join("; ");
+  }
+  return JSON.stringify(detail);
+}
+
 async function request(path, options) {
   const response = await fetch(path, options);
   if (!response.ok) {
@@ -24,7 +38,7 @@ async function request(path, options) {
     } catch {
       // Response wasn't JSON (e.g. a raw 500 page) -- keep the status text.
     }
-    throw new ApiError(response.status, detail);
+    throw new ApiError(response.status, detailToMessage(detail));
   }
   return response.json();
 }
@@ -64,4 +78,9 @@ export function getHistoryNetworks(limit) {
 /** GET /history/network/{bssid} -- every historical reading of one access point, oldest first. */
 export function getBssidHistory(bssid) {
   return request(`/history/network/${encodeURIComponent(bssid)}`);
+}
+
+/** GET /graph -- logical channel-similarity graph for the most recently recorded scan. */
+export function getGraph() {
+  return request("/graph");
 }
