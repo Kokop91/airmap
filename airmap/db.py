@@ -159,6 +159,64 @@ def get_scan_detail(scan_id: int) -> dict[str, Any] | None:
         }
 
 
+def get_scan_counts(limit: int | None = None) -> list[dict[str, Any]]:
+    """Per-scan network totals (overall + per band), oldest first.
+
+    Aggregated in SQL, not Python: the Phase 5 "networks over time" chart
+    only needs one row per scan, so summing here keeps the response small
+    even once `scans` grows into the hundreds. `limit`, when given, keeps
+    only the most recent N scans (still returned oldest-first, for charting
+    left-to-right).
+    """
+    query = """
+        SELECT s.id AS id, s.timestamp AS timestamp,
+               COUNT(r.id) AS total,
+               SUM(CASE WHEN r.band = '2.4GHz' THEN 1 ELSE 0 END) AS count_2_4ghz,
+               SUM(CASE WHEN r.band = '5GHz' THEN 1 ELSE 0 END) AS count_5ghz,
+               SUM(CASE WHEN r.band = '6GHz' THEN 1 ELSE 0 END) AS count_6ghz
+        FROM scans s
+        LEFT JOIN network_readings r ON r.scan_id = s.id
+        GROUP BY s.id
+        ORDER BY s.id DESC
+    """
+    with _connection() as conn:
+        if limit is not None:
+            rows = conn.execute(query + " LIMIT ?", (limit,)).fetchall()
+        else:
+            rows = conn.execute(query).fetchall()
+    result = [dict(row) for row in rows]
+    result.reverse()
+    return result
+
+
+def get_distinct_networks(limit: int | None = None) -> list[dict[str, Any]]:
+    """Distinct (ssid, bssid) pairs seen in the most recent `limit` scans.
+
+    `limit=None` means "across all recorded history". Relies on SQLite's
+    documented bare-column-with-MAX() behavior: `ssid` and `band` come from
+    the same row that produced `MAX(timestamp)` within each bssid group, so
+    they reflect that network's most recent reading rather than an arbitrary
+    one (matters if an SSID were ever renamed on the same AP).
+    """
+    scan_filter = ""
+    params: tuple[Any, ...] = ()
+    if limit is not None:
+        scan_filter = "WHERE s.id IN (SELECT id FROM scans ORDER BY id DESC LIMIT ?)"
+        params = (limit,)
+    query = f"""
+        SELECT r.ssid AS ssid, r.bssid AS bssid, r.band AS band,
+               MAX(s.timestamp) AS last_seen
+        FROM network_readings r
+        JOIN scans s ON s.id = r.scan_id
+        {scan_filter}
+        GROUP BY r.bssid
+        ORDER BY last_seen DESC
+    """
+    with _connection() as conn:
+        rows = conn.execute(query, params).fetchall()
+    return [dict(row) for row in rows]
+
+
 def get_bssid_history(bssid: str) -> list[dict[str, Any]]:
     """Every reading for one BSSID across all scans, oldest first.
 

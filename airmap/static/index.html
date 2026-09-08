@@ -19,19 +19,66 @@
 
   <div id="error-banner" class="error-banner hidden" role="alert"></div>
 
-  <main>
-    <section aria-labelledby="table-heading">
-      <h2 id="table-heading">Wykryte sieci</h2>
-      <div id="networks-table-container" class="table-scroll"></div>
-    </section>
+  <nav class="tabs" role="tablist">
+    <button id="tab-btn-list" class="tab-button active" type="button" role="tab"
+      aria-selected="true" aria-controls="tab-panel-list">Lista sieci</button>
+    <button id="tab-btn-history" class="tab-button" type="button" role="tab"
+      aria-selected="false" aria-controls="tab-panel-history">Historia</button>
+  </nav>
 
-    <section aria-labelledby="chart-heading">
-      <h2 id="chart-heading">Zajętość kanałów</h2>
-      <div class="charts-row">
-        <div id="chart-2-4ghz" class="chart"></div>
-        <div id="chart-5ghz" class="chart"></div>
-      </div>
-    </section>
+  <main>
+    <div id="tab-panel-list" role="tabpanel" aria-labelledby="tab-btn-list">
+      <section aria-labelledby="table-heading">
+        <h2 id="table-heading">Wykryte sieci</h2>
+        <div id="networks-table-container" class="table-scroll"></div>
+      </section>
+
+      <section aria-labelledby="chart-heading">
+        <h2 id="chart-heading">Zajętość kanałów</h2>
+        <div class="charts-row">
+          <div id="chart-2-4ghz" class="chart"></div>
+          <div id="chart-5ghz" class="chart"></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="tab-panel-history" role="tabpanel" aria-labelledby="tab-btn-history" class="hidden">
+      <div id="history-warning" class="warning-banner hidden"></div>
+
+      <section aria-labelledby="history-range-heading">
+        <h2 id="history-range-heading">Zakres czasu</h2>
+        <div class="history-range-controls">
+          <label for="history-range-select">Pokaż ostatnie:</label>
+          <select id="history-range-select">
+            <option value="10">10 skanów</option>
+            <option value="25">25 skanów</option>
+            <option value="50" selected>50 skanów</option>
+            <option value="100">100 skanów</option>
+            <option value="all">Wszystkie</option>
+          </select>
+          <span id="history-range-info" class="text-muted"></span>
+        </div>
+        <div id="history-scan-list" class="table-scroll"></div>
+      </section>
+
+      <section aria-labelledby="history-signal-heading">
+        <h2 id="history-signal-heading">Siła sygnału w czasie</h2>
+        <div class="history-bssid-controls">
+          <label for="history-bssid-select">Sieć:</label>
+          <select id="history-bssid-select"></select>
+        </div>
+        <div id="history-signal-chart" class="chart chart-wide"></div>
+      </section>
+
+      <section aria-labelledby="history-count-heading">
+        <h2 id="history-count-heading">Liczba widocznych sieci w czasie</h2>
+        <div class="history-count-controls">
+          <button type="button" class="toggle-button active" data-mode="total">Razem</button>
+          <button type="button" class="toggle-button" data-mode="band">Wg pasma</button>
+        </div>
+        <div id="history-count-chart" class="chart chart-wide"></div>
+      </section>
+    </div>
   </main>
 
   <script type="module" src="/static/js/app.js"></script>

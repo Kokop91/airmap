@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -78,6 +78,26 @@ class BssidHistoryEntryOut(BaseModel):
     signal_dbm: int | None
     signal_percent: int | None
     security: str
+
+
+class ScanNetworkCountOut(BaseModel):
+    """One row of `GET /history/counts`: per-scan network totals for the Phase 5 trend chart."""
+
+    id: int
+    timestamp: datetime
+    total: int
+    count_2_4ghz: int
+    count_5ghz: int
+    count_6ghz: int
+
+
+class DistinctNetworkOut(BaseModel):
+    """One row of `GET /history/networks`: a network seen at least once in the queried range."""
+
+    ssid: str
+    bssid: str
+    band: str
+    last_seen: datetime
 
 
 class AutoScanStartRequest(BaseModel):
@@ -207,6 +227,42 @@ def get_latest_networks() -> ScanDetailOut:
 def get_history() -> list[ScanSummaryOut]:
     """List every recorded scan (id + timestamp only), most recent first."""
     return [ScanSummaryOut(**row) for row in db.get_all_scans()]
+
+
+@app.get("/history/counts", response_model=list[ScanNetworkCountOut])
+def get_history_counts(
+    limit: int | None = Query(default=None, ge=1),
+) -> list[ScanNetworkCountOut]:
+    """Per-scan network totals (overall + per band), oldest first.
+
+    Phase 5's "networks over time" trend chart. This is a small aggregate
+    query rather than something the frontend derives from `GET /history/{id}`
+    calls, per scan -- that would mean one full-detail fetch per point on the
+    chart, which stops scaling once history grows into the hundreds of scans.
+    `limit`, when given, keeps only the most recent N scans.
+
+    Registered *before* `/history/{scan_id}` below: that route's `{scan_id}`
+    placeholder has no `:int` path converter, so Starlette matches it on
+    shape alone and only FastAPI's later int-parsing rejects a non-numeric
+    segment -- meaning if this route were declared after it, requests here
+    would 422 out of `/history/{scan_id}` instead of ever reaching this one.
+    """
+    return [ScanNetworkCountOut(**row) for row in db.get_scan_counts(limit)]
+
+
+@app.get("/history/networks", response_model=list[DistinctNetworkOut])
+def get_history_networks(
+    limit: int | None = Query(default=None, ge=1),
+) -> list[DistinctNetworkOut]:
+    """Distinct networks (by BSSID) seen within the most recent `limit` scans.
+
+    Backs the Phase 5 BSSID picker for the signal-over-time chart: without
+    this, listing the selectable networks would mean pulling every reading
+    across the queried range just to de-duplicate them client-side. See
+    `get_history_counts` above for why this must be declared before
+    `/history/{scan_id}`.
+    """
+    return [DistinctNetworkOut(**row) for row in db.get_distinct_networks(limit)]
 
 
 @app.get("/history/{scan_id}", response_model=ScanDetailOut)

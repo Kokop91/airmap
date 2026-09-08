@@ -43,3 +43,25 @@ export function postScan() {
 export function getAutoScanStatus() {
   return request("/scan/auto/status");
 }
+
+/** GET /history -- every recorded scan (id + timestamp), most recent first. */
+export function getHistory() {
+  return request("/history");
+}
+
+/** GET /history/counts -- per-scan network totals, oldest first. `limit` (optional) keeps only the most recent N scans. */
+export function getHistoryCounts(limit) {
+  const qs = limit != null ? `?limit=${encodeURIComponent(limit)}` : "";
+  return request(`/history/counts${qs}`);
+}
+
+/** GET /history/networks -- distinct networks seen in the most recent `limit` scans (all scans if omitted). */
+export function getHistoryNetworks(limit) {
+  const qs = limit != null ? `?limit=${encodeURIComponent(limit)}` : "";
+  return request(`/history/networks${qs}`);
+}
+
+/** GET /history/network/{bssid} -- every historical reading of one access point, oldest first. */
+export function getBssidHistory(bssid) {
+  return request(`/history/network/${encodeURIComponent(bssid)}`);
+}

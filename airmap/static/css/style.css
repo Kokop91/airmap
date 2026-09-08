@@ -183,6 +183,94 @@ section {
   min-height: 320px;
 }
 
+.chart-wide {
+  min-height: 340px;
+  width: 100%;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-button {
+  background: none;
+  color: var(--text-muted);
+  border-radius: 6px 6px 0 0;
+  padding: 0.6rem 1.1rem;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button:hover:not(:disabled) {
+  background: var(--badge-bg);
+  color: var(--text);
+}
+
+.tab-button.active {
+  color: var(--accent-dark);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.warning-banner {
+  background: var(--badge-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.history-range-controls,
+.history-bssid-controls,
+.history-count-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.history-range-controls select,
+.history-bssid-controls select {
+  font: inherit;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  color: var(--text);
+}
+
+.history-bssid-controls select {
+  min-width: 260px;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.toggle-button {
+  background: var(--panel-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+}
+
+.toggle-button:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.toggle-button.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
 @media (max-width: 700px) {
   body {
     padding: 1rem;

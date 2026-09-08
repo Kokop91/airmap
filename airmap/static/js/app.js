@@ -7,6 +7,7 @@
 
 import { ApiError, getAutoScanStatus, getLatestNetworks, postScan } from "./api.js";
 import { renderChannelCharts } from "./chart.js";
+import { initHistoryTab } from "./history.js";
 import { renderNetworksTable } from "./table.js";
 
 function showError(message) {
@@ -71,6 +72,29 @@ async function handleScanClick() {
     button.disabled = false;
     spinner.classList.add("hidden");
   }
+}
+
+const TABS = [
+  { buttonId: "tab-btn-list", panelId: "tab-panel-list" },
+  { buttonId: "tab-btn-history", panelId: "tab-panel-history" },
+];
+
+function activateTab(targetButtonId) {
+  for (const { buttonId, panelId } of TABS) {
+    const isActive = buttonId === targetButtonId;
+    document.getElementById(buttonId).classList.toggle("active", isActive);
+    document.getElementById(buttonId).setAttribute("aria-selected", String(isActive));
+    document.getElementById(panelId).classList.toggle("hidden", !isActive);
+  }
+  if (targetButtonId === "tab-btn-history") {
+    // Reloaded on every activation (not just the first) so switching back
+    // in always reflects any scans taken while on another tab.
+    initHistoryTab();
+  }
+}
+
+for (const { buttonId } of TABS) {
+  document.getElementById(buttonId).addEventListener("click", () => activateTab(buttonId));
 }
 
 document.getElementById("scan-button").addEventListener("click", handleScanClick);
